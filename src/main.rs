@@ -2,20 +2,23 @@ mod fact_thread;
 use std::sync::mpsc::{Sender, Receiver};
 use std::sync::mpsc;
 use std::thread;
+use std::io::{self, Write};
 use num_bigint::BigUint;
 
 fn main() {
+	let mut number = 0;
+	// the default, 0, will be expand the the number of CPU threads
+	let mut thread_count = 0;
+	let mut printing = false;
 	let args: Vec<String> = std::env::args().collect();
 	if args.len() == 1 || args[1] == "-i" || args[1] == "--interactive" {
-		println!("1 arg, doing interactive");
+		let params_tuple = interactive();
+		number = params_tuple.0;
+		thread_count = params_tuple.1;
+		printing = params_tuple.2;
 	} else if args[1] == "h" || args[1] == "--help" {
 		println!("{}", help());
 	} else {
-		let mut number = 0;
-		// the default, 0, will be expand the the number of CPU threads
-		let mut thread_count = 0;
-		let mut printing = false;
-
 		if args.len() < 3 {
 			println!("Invalid number of arguments.");
 			std::process::exit(1);
@@ -40,12 +43,12 @@ fn main() {
 				_ => {} // Do nothing
 			}
 		}
+	}
 
-		let result = gen_factorial(number, thread_count);
-		println!("Successfully generated {}!", number);
-		if printing {
-			println!("{}", result);
-		}
+	let result = gen_factorial(number, thread_count);
+	println!("Successfully generated {}!", number);
+	if printing {
+		println!("{}", result);
 	}
 }
 
@@ -61,7 +64,7 @@ fn help() -> &'static str {
 This program generates a factorial with parallel processing!
 
 Options:
--i, --interactive	Start in interactive mode. Default if no arguments are passed. (NOT IMPLEMENTED YET)
+-i, --interactive	Start in interactive mode. Default if no arguments are passed.
 -n, --number NUMBER	Input number to calculate the factorial of.
 -t, --threads THREADS	Number of threads to calculate the factorial with. (Automatically determined if not passed)
 -p, --print		Print the generated factorial to the screen."
@@ -113,4 +116,43 @@ fn gen_factorial(number: usize, mut thread_count: usize) -> BigUint {
 	result
 }
 
-	
+fn interactive() -> (usize, usize, bool) {
+	let mut number = 0;
+	let mut thread_count = 0;
+	let mut print = false;
+	let mut input = String::new();
+	let mut trimmed_input;
+
+	print!("How many threads do you want to use? (0 to automatically allocate): ");
+	input.clear();
+	io::stdout().flush().unwrap();
+	io::stdin().read_line(&mut input).unwrap();
+	trimmed_input = input.trim();
+	match trimmed_input.parse::<usize>() {
+		Ok(t) => thread_count = t,
+		Err(_) => println!("Invalid number!")
+	}
+
+	print!("Enter number to complete factorial: ");
+	input.clear();
+	io::stdout().flush().unwrap();
+	io::stdin().read_line(&mut input).unwrap();
+	trimmed_input = input.trim();
+	match trimmed_input.parse::<usize>() {
+		Ok(n) => number = n,
+		Err(_) => println!("Invalid number!")
+	}
+
+	print!("Would you like to print the result? ");
+	input.clear();
+	io::stdout().flush().unwrap();
+	io::stdin().read_line(&mut input).unwrap();
+	trimmed_input = input.trim();
+	match trimmed_input {
+		"yes" => print = true,
+		"no" => print = false,
+		_ => println!("Invalid input")
+	}
+
+	(number, thread_count, print)
+}
