@@ -86,14 +86,12 @@ fn gen_factorial(number: usize, mut thread_count: usize) -> BigUint {
 	let mut threads = Vec::with_capacity(thread_count);
 
 	// Start each thread.
-	let mut section_start = 0;
-	for _ in 0..thread_count {
+	for thread_num in 0..thread_count {
 		let thread_tx = tx.clone();
 
 		let current_thread = thread::spawn(move || {
-			let start = section_start + 1;
-			section_start += number / thread_count;
-			let end = section_start;
+			let start = thread_num * number / thread_count + 1;
+			let end = (thread_num + 1) * number / thread_count;
 			let thread_result = fact_thread::run(start, end);
 			thread_tx.send(thread_result).unwrap();
 		});
