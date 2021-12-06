@@ -23,18 +23,21 @@ fn main() {
 
 		// Iterate through arguments
 		for argument in 1..args.len() {
-			if args[argument] == "-n" || args[argument] == "--number" {
-				match args[argument + 1].parse::<usize>() {
-					Ok(n) => number = n,
-					Err(_) => invalid_args(&args[argument])
+			match &*args[argument] {
+				"-n" | "--number" => {
+					match args[argument + 1].parse::<usize>() {
+						Ok(n) => number = n,
+						Err(_) => invalid_args(&args[argument])
+					}
 				}
-			} else if args[argument] == "-t" || args[argument] == "--threads" {
-				match args[argument + 1].parse::<usize>() {
-					Ok(n) => thread_count = n,
-					Err(_) => invalid_args(&args[argument])
+				"-t" | "--threads" => {
+					match args[argument + 1].parse::<usize>() {
+						Ok(n) => thread_count = n,
+						Err(_) => invalid_args(&args[argument])
+					}
 				}
-			} else if args[argument] == "-p" || args[argument] == "--print" {
-				printing = true;
+				"-p" | "--print" => printing = true,
+				_ => {} // Do nothing
 			}
 		}
 
@@ -47,21 +50,21 @@ fn main() {
 }
 
 // Exits gracefully if an invalid argument is encountered
-fn invalid_args(arg_type: &str) {
+fn invalid_args(arg_type: &str) -> ! {
 	println!("Invalid argument for \"{}\". Check usage with \"--help\".", arg_type);
 	std::process::exit(1);
 }
 
 // Returns usage information for the program as a &str
 fn help() -> &'static str {
-	return "Usage: factorial-rs [OPTIONS]
+"Usage: factorial-rs [OPTIONS]
 This program generates a factorial with parallel processing!
 
 Options:
 -i, --interactive	Start in interactive mode. Default if no arguments are passed. (NOT IMPLEMENTED YET)
 -n, --number NUMBER	Input number to calculate the factorial of.
 -t, --threads THREADS	Number of threads to calculate the factorial with. (Automatically determined if not passed)
--p, --print		Print the generated factorial to the screen.";
+-p, --print		Print the generated factorial to the screen."
 }
 
 /* Initializes the threads to generate the factorial
@@ -101,14 +104,13 @@ fn gen_factorial(number: usize, mut thread_count: usize) -> BigUint {
 
 	let mut threads_remaining = thread_count;
 	while threads_remaining > 0 {
-		match rx.try_recv() {
-			Ok(thread_result) => {
-				result *= thread_result;
-				threads_remaining -= 1;
-			},
-			Err(_) => {}
+		if let Ok(thread_result) = rx.try_recv() {
+			result *= thread_result;
+			threads_remaining -= 1;
 		}
 	}
 
-	return result;
+	result
 }
+
+	

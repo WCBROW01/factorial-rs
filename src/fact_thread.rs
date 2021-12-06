@@ -7,5 +7,5 @@ pub fn run(start: usize, end: usize) -> BigUint {
 		section *= count;
 	}
 	
-	return section;
+	section
 }
