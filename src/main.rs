@@ -15,7 +15,7 @@ fn main() {
 		// the default, 0, will be expand the the number of CPU threads
 		let mut thread_count = 0;
 		let mut printing = false;
-		
+
 		if args.len() < 3 {
 			println!("Invalid number of arguments.");
 			std::process::exit(1);
@@ -33,15 +33,13 @@ fn main() {
 					Ok(n) => thread_count = n,
 					Err(_) => invalid_args(&args[argument])
 				}
-			} else if args[argument] == "--print" {
-				match args[argument + 1].parse::<usize>() {
-					Ok(_) => printing = true,
-					Err(_) => invalid_args(&args[argument])
-				}
+			} else if args[argument] == "-p" || args[argument] == "--print" {
+				printing = true;
 			}
 		}
-		
+
 		let result = gen_factorial(number, thread_count);
+		println!("Successfully generated {}!", number);
 		if printing {
 			println!("{}", result);
 		}
@@ -56,13 +54,14 @@ fn invalid_args(arg_type: &str) {
 
 // Returns usage information for the program as a &str
 fn help() -> &'static str {
-	return "Usage: factorial [OPTIONS]
-	This program generates a factorial with parallel processing!
+	return "Usage: factorial-rs [OPTIONS]
+This program generates a factorial with parallel processing!
 
-	Options:
-	-i, --interactive	Start in interactive mode. Default if no arguments are passed. (NOT IMPLEMENTED YET)
-	-n, --number NUMBER	Input number to calculate the factorial of.
-	-t, --threads THREADS	Number of threads to calculate the factorial with. (Automatically determined if not passed)";
+Options:
+-i, --interactive	Start in interactive mode. Default if no arguments are passed. (NOT IMPLEMENTED YET)
+-n, --number NUMBER	Input number to calculate the factorial of.
+-t, --threads THREADS	Number of threads to calculate the factorial with. (Automatically determined if not passed)
+-p, --print		Print the generated factorial to the screen.";
 }
 
 /* Initializes the threads to generate the factorial
@@ -112,5 +111,6 @@ fn gen_factorial(number: usize, mut thread_count: usize) -> BigUint {
 			Err(_) => {}
 		}
 	}
+
 	return result;
 }

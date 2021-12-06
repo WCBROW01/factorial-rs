@@ -13,5 +13,6 @@ Usage: factorial-rs [OPTIONS]
 Options:
 -i, --interactive		Start in interactive mode. Default if no arguments are passed. (NOT IMPLEMENTED YET)
 -n, --number NUMBER		Input number to calculate the factorial of.
--t, --threads THREADS	Number of threads to calculate the factorial with. (Automatically determined if not passed)
+-t, --threads THREADS		Number of threads to calculate the factorial with. (Automatically determined if not passed)
+-p, --print		Print the generated factorial to the screen.
 ```
