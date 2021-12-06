@@ -121,14 +121,13 @@ fn interactive() -> (usize, usize, bool) {
 	let mut thread_count = 0;
 	let mut print = false;
 	let mut input = String::new();
-	let mut trimmed_input;
 
 	print!("How many threads do you want to use? (0 to automatically allocate): ");
 	input.clear();
 	io::stdout().flush().unwrap();
 	io::stdin().read_line(&mut input).unwrap();
-	trimmed_input = input.trim();
-	match trimmed_input.parse::<usize>() {
+	input = input.trim().to_owned();
+	match input.parse::<usize>() {
 		Ok(t) => thread_count = t,
 		Err(_) => println!("Invalid number!")
 	}
@@ -137,8 +136,8 @@ fn interactive() -> (usize, usize, bool) {
 	input.clear();
 	io::stdout().flush().unwrap();
 	io::stdin().read_line(&mut input).unwrap();
-	trimmed_input = input.trim();
-	match trimmed_input.parse::<usize>() {
+	input = input.trim().to_owned();
+	match input.parse::<usize>() {
 		Ok(n) => number = n,
 		Err(_) => println!("Invalid number!")
 	}
@@ -147,10 +146,10 @@ fn interactive() -> (usize, usize, bool) {
 	input.clear();
 	io::stdout().flush().unwrap();
 	io::stdin().read_line(&mut input).unwrap();
-	trimmed_input = input.trim();
-	match trimmed_input {
-		"yes" => print = true,
-		"no" => print = false,
+	input = input.to_lowercase().trim().to_owned();
+	match &*input {
+		"yes" | "y" => print = true,
+		"no" | "n" => print = false,
 		_ => println!("Invalid input")
 	}
 
