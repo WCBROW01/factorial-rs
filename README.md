@@ -27,4 +27,4 @@ To get usage information, just run the program with the `--help` flag!
 
 `-t` or `--threads` will run the program with the desired number of threads.
 
-`-p` or `--print` will print the generated factorial to the console. (WARNING: COULD BE VERY SLOW)
+`-p` or `--print` will print the generated factorial to the console.
