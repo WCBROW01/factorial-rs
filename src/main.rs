@@ -1,9 +1,8 @@
-mod fact_thread;
 use std::sync::mpsc::{Sender, Receiver};
 use std::sync::mpsc;
 use std::thread;
 use std::io::{self, Write};
-use num_bigint::BigUint;
+use rug::{Integer, Assign};
 
 fn main() {
 	let mut number = 0;
@@ -72,8 +71,9 @@ Options:
 
 /* Initializes the threads to generate the factorial
  * and collects the results from each thread */
-fn gen_factorial(number: usize, mut thread_count: usize) -> BigUint {
-	let mut result = BigUint::new(vec![1]);
+fn gen_factorial(number: usize, mut thread_count: usize) -> Integer {
+	let mut result = Integer::new();
+	result.assign(1);
 
 	/* If the input is less than 1 (either 0 or a negative number),
 	 * grab the number of available processors and use that. */
@@ -88,7 +88,7 @@ fn gen_factorial(number: usize, mut thread_count: usize) -> BigUint {
 	}
 
 	// Create an vector the size of the thread count.
-	let (tx, rx): (Sender<BigUint>, Receiver<BigUint>) = mpsc::channel();
+	let (tx, rx): (Sender<Integer>, Receiver<Integer>) = mpsc::channel();
 	let mut threads = Vec::with_capacity(thread_count);
 
 	// Start each thread.
@@ -98,7 +98,7 @@ fn gen_factorial(number: usize, mut thread_count: usize) -> BigUint {
 		let current_thread = thread::spawn(move || {
 			let start = thread_num * number / thread_count + 1;
 			let end = (thread_num + 1) * number / thread_count;
-			let thread_result = fact_thread::run(start, end);
+			let thread_result = run(start, end);
 			thread_tx.send(thread_result).unwrap();
 		});
 
@@ -114,6 +114,17 @@ fn gen_factorial(number: usize, mut thread_count: usize) -> BigUint {
 	}
 
 	result
+}
+
+// Entrypoint for each of the factorial threads
+fn run(start: usize, end: usize) -> Integer {
+	let mut section = Integer::new();
+	section.assign(1);
+	for count in start..end+1 {
+		section *= count as u64;
+	}
+
+	section
 }
 
 fn interactive() -> (usize, usize, bool) {
