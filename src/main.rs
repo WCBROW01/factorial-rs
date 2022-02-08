@@ -76,9 +76,9 @@ fn gen_factorial(number: usize, mut thread_count: usize) -> Integer {
 	result.assign(1);
 
 	/* If the input is less than 1 (either 0 or a negative number),
-	 * grab the number of available processors and use that. */
+	 * grab the number of available processors and use double that. */
 	if thread_count < 1 {
-		thread_count = num_cpus::get();
+		thread_count = num_cpus::get() * 2;
 	}
 
 	/* If we have a greater quantity of threads than numbers to multiply,
