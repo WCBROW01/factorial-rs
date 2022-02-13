@@ -7,4 +7,3 @@ edition = "2021"
 
 [dependencies]
 rug = "1.15"
-num_cpus = "1.13"
