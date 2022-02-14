@@ -23,10 +23,10 @@ fn main() {
 	for argument in 1..args.len() {
 		match &*args[argument] {
 			"-n" | "--number" => {
-				match args[argument + 1].parse::<usize>() {
-					Ok(n) => number = n,
+				number = match args[argument + 1].parse::<usize>() {
+					Ok(n) => n,
 					Err(_) => invalid_args(&args[argument])
-				}
+				};
 			}
 			"-p" | "--print" => printing = true,
 			_ => {} // Do nothing
@@ -151,8 +151,6 @@ fn factorial(start: usize, end: usize) -> Integer {
 
 /// Interactive REPL for initializing the program
 fn interactive() -> (usize, bool) {
-	let number;
-	let print;
 	let mut input = String::new();
 
 	print!("Enter number to complete factorial: ");
@@ -160,27 +158,27 @@ fn interactive() -> (usize, bool) {
 	io::stdout().flush().unwrap();
 	io::stdin().read_line(&mut input).unwrap();
 	input = input.trim().to_owned();
-	match input.parse::<usize>() {
-		Ok(n) => number = n,
+	let number = match input.parse::<usize>() {
+		Ok(n) => n,
 		Err(_) => {
 			eprintln!("Invalid number!");
 			std::process::exit(1);
 		}
-	}
+	};
 
 	print!("Would you like to print the result? ");
 	input.clear();
 	io::stdout().flush().unwrap();
 	io::stdin().read_line(&mut input).unwrap();
 	input = input.to_lowercase().trim().to_owned();
-	match &*input {
-		"yes" | "y" => print = true,
-		"no" | "n" => print = false,
+	let print = match &*input {
+		"yes" | "y" => true,
+		"no" | "n" => false,
 		_ => {
 			eprintln!("Invalid input");
 			std::process::exit(1);
 		}
-	}
+	};
 
 	(number, print)
 }
