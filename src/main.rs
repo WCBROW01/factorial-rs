@@ -14,24 +14,22 @@ fn main() {
 		printing = params_tuple.1;
 	} else if args[1] == "h" || args[1] == "--help" {
 		println!("{}", help());
-	} else {
-		if args.len() < 3 {
-			println!("Invalid number of arguments.");
-			std::process::exit(1);
-		}
+	} else if args.len() < 3 {
+		eprintln!("Invalid number of arguments.");
+		std::process::exit(1);
+	}
 
-		// Iterate through arguments
-		for argument in 1..args.len() {
-			match &*args[argument] {
-				"-n" | "--number" => {
-					match args[argument + 1].parse::<usize>() {
-						Ok(n) => number = n,
-						Err(_) => invalid_args(&args[argument])
-					}
+	// Iterate through arguments
+	for argument in 1..args.len() {
+		match &*args[argument] {
+			"-n" | "--number" => {
+				match args[argument + 1].parse::<usize>() {
+					Ok(n) => number = n,
+					Err(_) => invalid_args(&args[argument])
 				}
-				"-p" | "--print" => printing = true,
-				_ => {} // Do nothing
 			}
+			"-p" | "--print" => printing = true,
+			_ => {} // Do nothing
 		}
 	}
 
@@ -44,7 +42,7 @@ fn main() {
 
 /// Exits gracefully if an invalid argument is encountered
 fn invalid_args(arg_type: &str) -> ! {
-	println!("Invalid argument for \"{}\". Check usage with \"--help\".", arg_type);
+	eprintln!("Invalid argument for \"{}\". Check usage with \"--help\".", arg_type);
 	std::process::exit(1);
 }
 
@@ -91,15 +89,12 @@ fn gen_thread_list(number: usize) -> Vec<usize> {
 }
 
 fn gen_factorial(number: usize) -> Integer {
-	let result;
 	if number > 16 {
 		let thread_list = Arc::new(gen_thread_list(number));
-		result = gen_threads(0, number, thread_list, 0);
+		gen_threads(0, number, thread_list, 0)
 	} else {
-		result = factorial(1, number);
+		factorial(1, number)
 	}
-
-	result
 }
 
 /// Initializes the threads used to generate the factorial and collects the results from each thread
@@ -109,37 +104,34 @@ fn gen_threads(start: usize, end: usize, thread_list: Arc<Vec<usize>>, level: us
 	let mut result = Integer::new();
 	result.assign(1);
 
-	// Create an vector the size of the thread count.
+	// Create a channel for sending/recieving the thread results
 	let (tx, rx): (Sender<Integer>, Receiver<Integer>) = mpsc::channel();
-	let mut threads = Vec::with_capacity(thread_count);
 
 	// Start each thread.
 	for thread_num in 0..thread_count {
 		let thread_list = thread_list.clone();
 		let thread_tx = tx.clone();
 
-		let current_thread = thread::spawn(move || {
+		thread::spawn(move || {
 			let thread_start = thread_num * length / thread_count + start + 1;
 			let thread_end = (thread_num + 1) * length / thread_count + start;
-			let thread_result;
-
-			if level < thread_list.len() - 1 {
-				thread_result = gen_threads(thread_start, thread_end, thread_list, level + 1);
+			let thread_result = if level < thread_list.len() - 1 {
+				gen_threads(thread_start, thread_end, thread_list, level + 1)
 			} else {
-				thread_result = factorial(thread_start, thread_end);
+				factorial(thread_start, thread_end)
+			};
+
+			match thread_tx.send(thread_result) {
+				Ok(_) => {},
+				Err(_) => panic!("Failed to send result to parent thread.")
 			}
-
-			thread_tx.send(thread_result).unwrap();
 		});
-
-		threads.push(current_thread);
 	}
 
-	let mut threads_remaining = thread_count;
-	while threads_remaining > 0 {
-		if let Ok(thread_result) = rx.try_recv() {
-			result *= thread_result;
-			threads_remaining -= 1;
+	for _ in 0..thread_count {
+		match rx.recv() {
+			Ok(n) => result *= n,
+			Err(_) => panic!("Failed to retrieve result from a child thread.")
 		}
 	}
 
@@ -159,8 +151,8 @@ fn factorial(start: usize, end: usize) -> Integer {
 
 /// Interactive REPL for initializing the program
 fn interactive() -> (usize, bool) {
-	let mut number = 0;
-	let mut print = false;
+	let number;
+	let print;
 	let mut input = String::new();
 
 	print!("Enter number to complete factorial: ");
@@ -170,7 +162,10 @@ fn interactive() -> (usize, bool) {
 	input = input.trim().to_owned();
 	match input.parse::<usize>() {
 		Ok(n) => number = n,
-		Err(_) => println!("Invalid number!")
+		Err(_) => {
+			eprintln!("Invalid number!");
+			std::process::exit(1);
+		}
 	}
 
 	print!("Would you like to print the result? ");
@@ -181,7 +176,10 @@ fn interactive() -> (usize, bool) {
 	match &*input {
 		"yes" | "y" => print = true,
 		"no" | "n" => print = false,
-		_ => println!("Invalid input")
+		_ => {
+			eprintln!("Invalid input");
+			std::process::exit(1);
+		}
 	}
 
 	(number, print)
